@@ -27,6 +27,13 @@ type EpisodeProps = {
 };
 
 export default function Episode({ episode }: EpisodeProps) {
+  const router = useRouter();
+
+  // para quando usar fallback como true e fazer a chamada a api pelo client
+  // if (router.isFallback) {
+  //   return <p>Carregando</p>;
+  // }
+
   return (
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
@@ -62,9 +69,27 @@ export default function Episode({ episode }: EpisodeProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  const { data }: { data: Episode[] } = await api.get("episodes", {
+    params: {
+      _limit: 2,
+      _sort: "published_at",
+      _order: "desc"
+    }
+  });
+
+  const paths = data.map((episode: Episode) => {
+    return {
+      params: {
+        slug: episode.id
+      }
+    };
+  });
+
   return {
-    paths: [],
-    fallback: "blocking"
+    paths,
+    fallback: "blocking" // incremental static regeneration (ISR)
+    // fallback: true // vai fazer o fetch no cliente
+    // fallback: false // vai dar erro 404 se não passar parametro no paths
   };
 };
 
