@@ -2,12 +2,8 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { format, parseISO } from "date-fns";
-import ptBR from "date-fns/locale/pt-BR";
 
-import { api } from "../../services/api";
-import { convertDurationToTimeString } from "../../utils/convertDurationToTimeString";
+import { EpisodesService } from "../../services/EpisodesService";
 import { usePlayer } from "../../contexts/PlayerContext";
 
 import styles from "./episode.module.scss";
@@ -75,13 +71,7 @@ export default function Episode({ episode }: EpisodeProps) {
 
 //Paginas estáticas geradas dinãmicamente precisa do getStaticPaths
 export const getStaticPaths: GetStaticPaths = async () => {
-  const { data }: { data: Episode[] } = await api.get("episodes", {
-    params: {
-      _limit: 2,
-      _sort: "published_at",
-      _order: "desc"
-    }
-  });
+  const data = await EpisodesService.getEpisodes(2, "published_at", "desc");
 
   const paths = data.map((episode: Episode) => {
     return {
@@ -102,22 +92,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ctx => {
   const { slug } = ctx.params;
 
-  const { data } = await api.get(`episodes/${slug}`);
-  const episode = {
-    id: data.id,
-    title: data.title,
-    thumbnail: data.thumbnail,
-    members: data.members,
-    description: data.description,
-    url: data.file.url,
-    duration: Number(data.file.duration),
-    durationAsString: convertDurationToTimeString(Number(data.file.duration)),
-    publishedAt: format(parseISO(data.published_at), "d MMM yy", {
-      locale: ptBR
-    })
-  };
+  const episode: Episode = await EpisodesService.getEpisodeFormatted(
+    slug as string
+  );
+
   return {
     props: { episode },
-    revalidate: 60 * 60 * 24 // 24 hours
+    revalidate: 86400 // 24 hours
   };
 };

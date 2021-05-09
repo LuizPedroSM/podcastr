@@ -3,12 +3,8 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 
-import { format, parseISO } from "date-fns";
-import ptBR from "date-fns/locale/pt-BR";
-
+import { EpisodesService } from "../services/EpisodesService";
 import { usePlayer } from "../contexts/PlayerContext";
-import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
-import { api } from "../services/api";
 
 import styles from "../styles/Home.module.scss";
 
@@ -135,31 +131,10 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
 // SSG( Server Side Generate) getStaticProps
 
 export const getStaticProps: GetStaticProps = async () => {
-  const { data } = await api.get("episodes", {
-    params: {
-      _limit: 12,
-      _sort: "published_at",
-      _order: "desc"
-    }
-  });
-
-  const episodes: Episode[] = data.map(
-    (episode): Episode => {
-      return {
-        id: episode.id,
-        title: episode.title,
-        thumbnail: episode.thumbnail,
-        members: episode.members,
-        url: episode.file.url,
-        duration: Number(episode.file.duration),
-        durationAsString: convertDurationToTimeString(
-          Number(episode.file.duration)
-        ),
-        publishedAt: format(parseISO(episode.published_at), "d MMM yy", {
-          locale: ptBR
-        })
-      };
-    }
+  const episodes: Episode[] = await EpisodesService.getEpisodesFormatted(
+    12,
+    "published_at",
+    "desc"
   );
 
   const latestEpisodes: Episode[] = episodes.slice(0, 2);
@@ -170,6 +145,6 @@ export const getStaticProps: GetStaticProps = async () => {
       latestEpisodes,
       allEpisodes
     },
-    revalidate: 60 * 60 * 8
+    revalidate: 28800 // 8 hours
   };
 };
