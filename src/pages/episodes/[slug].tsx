@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from "next";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -7,6 +8,7 @@ import ptBR from "date-fns/locale/pt-BR";
 
 import { api } from "../../services/api";
 import { convertDurationToTimeString } from "../../utils/convertDurationToTimeString";
+import { usePlayer } from "../../contexts/PlayerContext";
 
 import styles from "./episode.module.scss";
 
@@ -27,15 +29,18 @@ type EpisodeProps = {
 };
 
 export default function Episode({ episode }: EpisodeProps) {
-  const router = useRouter();
-
+  // const router = useRouter();
   // para quando usar fallback como true e fazer a chamada a api pelo client
   // if (router.isFallback) {
   //   return <p>Carregando</p>;
   // }
+  const { play } = usePlayer();
 
   return (
     <div className={styles.episode}>
+      <Head>
+        <title>{episode.title} | Podcastr</title>
+      </Head>
       <div className={styles.thumbnailContainer}>
         <Link href="/">
           <button type="button">
@@ -48,7 +53,7 @@ export default function Episode({ episode }: EpisodeProps) {
           objectFit="cover"
           src={episode.thumbnail}
         />
-        <button type="button">
+        <button type="button" onClick={() => play(episode)}>
           <img src="/play.svg" alt="Tocar episódio" />
         </button>
       </div>
@@ -68,6 +73,7 @@ export default function Episode({ episode }: EpisodeProps) {
   );
 }
 
+//Paginas estáticas geradas dinãmicamente precisa do getStaticPaths
 export const getStaticPaths: GetStaticPaths = async () => {
   const { data }: { data: Episode[] } = await api.get("episodes", {
     params: {
@@ -89,7 +95,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     paths,
     fallback: "blocking" // incremental static regeneration (ISR)
     // fallback: true // vai fazer o fetch no cliente
-    // fallback: false // vai dar erro 404 se não passar parametro no paths
+    // fallback: false // vai dar erro 404 se não passar parâmetro no paths
   };
 };
 
