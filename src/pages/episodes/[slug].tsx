@@ -71,7 +71,7 @@ export default function Episode({ episode }: EpisodeProps) {
 
 //Paginas estáticas geradas dinãmicamente precisa do getStaticPaths
 export const getStaticPaths: GetStaticPaths = async () => {
-  const data = await EpisodesService.getEpisodes(2, "published_at", "desc");
+  const data = await EpisodesService.getEpisodesFromDB(2, "published_at", "desc");
 
   const paths = data.map((episode: Episode) => {
     return {
@@ -92,12 +92,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ctx => {
   const { slug } = ctx.params;
 
-  const episode: Episode = await EpisodesService.getEpisodeFormatted(
-    slug as string
-  );
+  const episode: Episode = await EpisodesService.getEpisodeFromDB(slug);
+
+  const formattedEpisode = EpisodesService.formatEpisode(episode)
+  console.log(formattedEpisode);
 
   return {
-    props: { episode },
+    props: { episode: formattedEpisode },
     revalidate: 86400 // 24 hours
   };
 };

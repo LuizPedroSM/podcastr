@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { connectToDatabase } from "../../../utils/mongodb";
-
+import { EpisodesService } from "../../../services/EpisodesService";
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const {
@@ -11,8 +10,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     switch (method) {
       case "GET":
         if (slug) {
-          const { db } = await connectToDatabase();
-          const data = await db.collection("episodes").findOne({ id: slug });
+          const data = EpisodesService.getEpisodeFromDB(slug);
           res.status(200).json(data);
         }
         break;

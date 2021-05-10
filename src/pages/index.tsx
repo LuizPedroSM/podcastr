@@ -7,6 +7,7 @@ import { EpisodesService } from "../services/EpisodesService";
 import { usePlayer } from "../contexts/PlayerContext";
 
 import styles from "../styles/Home.module.scss";
+import episodes from "./api/episodes";
 
 type Episode = {
   id: string;
@@ -131,14 +132,19 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
 // SSG( Server Side Generate) getStaticProps
 
 export const getStaticProps: GetStaticProps = async () => {
-  const episodes: Episode[] = await EpisodesService.getEpisodesFormatted(
+  const episodes: Episode[] = await EpisodesService.getEpisodesFromDB(
     12,
     "published_at",
     "desc"
   );
 
-  const latestEpisodes: Episode[] = episodes.slice(0, 2);
-  const allEpisodes: Episode[] = episodes.slice(2, episodes.length);
+  const formattedEpisodes = EpisodesService.formatEpisodes(episodes);
+
+  const latestEpisodes: Episode[] = formattedEpisodes.slice(0, 2);
+  const allEpisodes: Episode[] = formattedEpisodes.slice(
+    2,
+    formattedEpisodes.length
+  );
 
   return {
     props: {
